@@ -126,7 +126,9 @@ def format_file(path):
     """
     Runs black auto-formatter on file at path
     """
-    reformat_one(Path(path), False, WriteBack.YES, FileMode(), Report(quiet=True))
+    report = Report(quiet=True)
+    reformat_one(Path(path), False, WriteBack.YES, FileMode(), report)
+    return report.failure_count == 0
 
 
 def compare_existing(rendered, tests_path):
@@ -161,7 +163,8 @@ def generate_exercise(env, spec_path, exercise, check=False):
         rendered = template.render(**spec)
         with NamedTemporaryFile('w', delete=False) as tmp:
             tmp.write(rendered)
-        format_file(tmp.name)
+        if not format_file(tmp.name):
+            return False
         if check:
             try:
                 if not filecmp.cmp(tmp.name, tests_path):
